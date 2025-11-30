@@ -1,0 +1,193 @@
+-- Made by WolfIk8
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
+
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local frame = playerGui:WaitForChild("CoreHud"):WaitForChild("Subject")
+
+-- Конфигурация кнопок
+local buttonConfigs = {
+    {
+        Name = "Slash",
+        Key = Enum.UserInputType.MouseButton1,
+        KeyName = "LMB",
+        RemoteEvent = ReplicatedStorage:WaitForChild("PleaseStopSkiddingMyCharacterEvents"):WaitForChild("Subject"):WaitForChild("SubjectAttackRemote"),
+        Animations = {
+            ["PursuerJason"]="rbxassetid://136716492979156",
+            ["WhitePumpkin"]="rbxassetid://118879458280903",
+            ["Default"]="rbxassetid://101757043928040"
+        },
+        Cooldown = 1
+    },
+    {
+        Name = "Sike",
+        Key = Enum.KeyCode.Q,
+        KeyName = "Q",
+        RemoteEvent = ReplicatedStorage:WaitForChild("PleaseStopSkiddingMyCharacterEvents"):WaitForChild("Subject"):WaitForChild("Sike"),
+        Animations = nil,
+        Cooldown = 9
+    },
+    {
+        Name = "Throat Steal",
+        Key = Enum.KeyCode.E,
+        KeyName = "E",
+        RemoteEvent = ReplicatedStorage:WaitForChild("PleaseStopSkiddingMyCharacterEvents"):WaitForChild("Subject"):WaitForChild("ThroatSteal"),
+        Animations = {
+            ["PursuerJason"]="rbxassetid://98770871178538",
+            ["Default"]="rbxassetid://104508004691131"
+        },
+        Cooldown = 6
+    },
+    {
+        Name = "Birthday Smash",
+        Key = Enum.KeyCode.R,
+        KeyName = "R",
+        RemoteEvent = ReplicatedStorage:WaitForChild("PleaseStopSkiddingMyCharacterEvents"):WaitForChild("Subject"):WaitForChild("BirthdaySmash"),
+        Animations = nil,
+        Cooldown = 9
+    }
+}
+
+-- Сохраняем позиции и размеры старых кнопок
+local oldButtonsData = {}
+for _, cfg in ipairs(buttonConfigs) do
+    local oldBtn = frame:FindFirstChild(cfg.Name)
+    if oldBtn and oldBtn:IsA("ImageButton") then
+        oldButtonsData[cfg.Name] = {
+            Position = oldBtn.AbsolutePosition,
+            Size = oldBtn.AbsoluteSize
+        }
+    end
+end
+
+-- Удаляем старые кнопки
+for _, oldBtn in ipairs(frame:GetChildren()) do
+    if oldBtn:IsA("ImageButton") and table.find({"Slash","Sike","Throat Steal","Birthday Smash"}, oldBtn.Name) then
+        oldBtn:Destroy()
+    end
+end
+
+-- Функция динамического размера третьей строки
+local function adjustFont(label)
+    local text = label.Text
+    local labelWidth = label.AbsoluteSize.X
+    local labelHeight = label.AbsoluteSize.Y
+    local maxSize = 11
+    local minSize = 5
+    local font = label.Font
+
+    local size = maxSize
+    while size >= minSize do
+        local textSize = TextService:GetTextSize(text, size, font, Vector2.new(10000,10000))
+        if textSize.X <= labelWidth and textSize.Y <= labelHeight then break end
+        size = size - 1
+    end
+    label.TextSize = size
+end
+
+-- Создаем новые кнопки
+for _, cfg in ipairs(buttonConfigs) do
+    local data = oldButtonsData[cfg.Name]
+    if data then
+        local btn = Instance.new("TextButton")
+        btn.Name = cfg.Name
+        btn.BackgroundColor3 = Color3.new(0,0,0)
+        btn.BackgroundTransparency = 0.5
+        btn.Text = ""
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = Color3.new(0,0,0)
+
+        local parentSize = frame.AbsoluteSize
+        local scaleX = data.Position.X / parentSize.X
+        local scaleY = data.Position.Y / parentSize.Y
+        local sizeX = data.Size.X / parentSize.X
+        local sizeY = data.Size.Y / parentSize.Y
+
+        btn.Position = UDim2.new(scaleX,0,scaleY,0)
+        btn.Size = UDim2.new(sizeX,0,sizeY,0)
+        btn.Parent = frame
+
+        -- Первая строка: клавиша
+        local tKey = Instance.new("TextLabel", btn)
+        tKey.Size = UDim2.new(1,0,0.33,0)
+        tKey.Position = UDim2.new(0,0,0,0)
+        tKey.Text = cfg.KeyName
+        tKey.BackgroundTransparency = 1
+        tKey.TextColor3 = Color3.new(1,1,1)
+        tKey.Font = Enum.Font.Gotham
+        tKey.TextSize = 13
+
+        -- Вторая строка: таймер
+        local tTimer = Instance.new("TextLabel", btn)
+        tTimer.Size = UDim2.new(1,0,0.33,0)
+        tTimer.Position = UDim2.new(0,0,0.33,0)
+        tTimer.Text = ""
+        tTimer.BackgroundTransparency = 1
+        tTimer.TextColor3 = Color3.new(1,1,1)
+        tTimer.Font = Enum.Font.Gotham
+        tTimer.TextSize = 23
+
+        -- Третья строка: название способности
+        local tName = Instance.new("TextLabel", btn)
+        tName.Size = UDim2.new(1,0,0.34,0)
+        tName.Position = UDim2.new(0,0,0.66,0)
+        tName.Text = cfg.Name
+        tName.BackgroundTransparency = 1
+        tName.TextColor3 = Color3.new(1,1,1)
+        tName.Font = Enum.Font.Gotham
+        tName:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+            adjustFont(tName)
+        end)
+
+        -- Функционал кнопки
+        local canClick = true
+        local animTrack
+        if cfg.Animations then
+            local char = player.Character or player.CharacterAdded:Wait()
+            local humanoid = char:WaitForChild("Humanoid")
+            local animation = Instance.new("Animation")
+            local skin = char:GetAttribute("Skin")
+            animation.AnimationId = cfg.Animations[skin] or cfg.Animations["Default"]
+            animTrack = humanoid:LoadAnimation(animation)
+            animTrack.Looped = false
+            player.CharacterAdded:Connect(function(c)
+                local h = c:WaitForChild("Humanoid")
+                local a = Instance.new("Animation")
+                local s = c:GetAttribute("Skin")
+                a.AnimationId = cfg.Animations[s] or cfg.Animations["Default"]
+                animTrack = h:LoadAnimation(a)
+                animTrack.Looped = false
+            end)
+        end
+
+        local function activate()
+            if not canClick then return end
+            local char = player.Character
+            if not char or char:GetAttribute("Character") ~= "Subject" or char.Humanoid.Health <= 0 then return end
+            canClick = false
+            if animTrack then animTrack:Play() end
+            cfg.RemoteEvent:FireServer()
+
+            tTimer.Text = tostring(cfg.Cooldown)
+            task.spawn(function()
+                for t = cfg.Cooldown*10,1,-1 do
+                    tTimer.Text = string.format("%.1f", t/10)
+                    task.wait(0.1)
+                end
+                tTimer.Text = ""
+                canClick = true
+            end)
+        end
+
+        btn.Activated:Connect(activate)
+        UserInputService.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType == cfg.Key or input.KeyCode == cfg.Key then
+                activate()
+            end
+        end)
+    end
+end
