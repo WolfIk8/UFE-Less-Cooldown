@@ -1,0 +1,177 @@
+-- Made by WolfIk8
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
+
+-- Player and GUI
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local frame = playerGui:WaitForChild("CoreHud"):WaitForChild("Guest666")
+
+-- Button Configuration
+local buttonConfigs = {
+    {
+        Name = "Carving Slash",
+        Key = Enum.UserInputType.MouseButton1,
+        KeyName = "LMB",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Sixer:WaitForChild("SixerSlash"),
+        Animations = {
+            ["Default"] = "rbxassetid://104802307926058"
+        },
+        Cooldown = 1
+    },
+    {
+        Name = "DemonicPursuit",
+        Key = Enum.KeyCode.Q,
+        KeyName = "Q",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Sixer:WaitForChild("SixerPursuit"),
+        Animations = nil,
+        Cooldown = 20
+    },
+    {
+        Name = "InfernalCry",
+        Key = Enum.KeyCode.E,
+        KeyName = "E",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Sixer:WaitForChild("InfernalCry"),
+        Animations = nil,
+        Cooldown = 9
+    },
+    {
+        Name = "BloodRush",
+        Key = Enum.KeyCode.R,
+        KeyName = "R",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Sixer:WaitForChild("BloodRush"),
+        Animations = nil,
+        Cooldown = 9
+    }
+}
+
+-- Save old button positions and sizes
+local oldButtonsData = {}
+for _, cfg in ipairs(buttonConfigs) do
+    local oldBtn = frame:FindFirstChild(cfg.Name)
+    if oldBtn and oldBtn:IsA("ImageButton") then
+        oldButtonsData[cfg.Name] = {
+            Position = oldBtn.AbsolutePosition,
+            Size = oldBtn.AbsoluteSize
+        }
+    end
+end
+
+-- Remove old buttons
+for _, oldBtn in ipairs(frame:GetChildren()) do
+    if oldBtn:IsA("ImageButton") and table.find({"Carving Slash","DemonicPursuit","InfernalCry","BloodRush"}, oldBtn.Name) then
+        oldBtn:Destroy()
+    end
+end
+
+-- Font adjustment function
+local function adjustFont(label)
+    local text = label.Text
+    local labelWidth = label.AbsoluteSize.X
+    local labelHeight = label.AbsoluteSize.Y
+    local maxSize = 20
+    local minSize = 5
+    local font = label.Font
+    local size = maxSize
+    while size >= minSize do
+        local textSize = TextService:GetTextSize(text, size, font, Vector2.new(10000,10000))
+        if textSize.X <= labelWidth and textSize.Y <= labelHeight then break end
+        size = size - 1
+    end
+    label.TextSize = size
+end
+
+-- GUI Creation
+for _, cfg in ipairs(buttonConfigs) do
+    local data = oldButtonsData[cfg.Name]
+
+    if data then
+        local btn = Instance.new("TextButton")
+        btn.Name = cfg.Name
+        btn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+        btn.BackgroundTransparency = 0.5
+        btn.Text = ""
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = Color3.fromRGB(0,0,0)
+
+        btn.Position = UDim2.fromOffset(data.Position.X, data.Position.Y)
+        btn.Size = UDim2.fromOffset(data.Size.X, data.Size.Y)
+        btn.Parent = frame
+
+        -- Key Label
+        local tKey = Instance.new("TextLabel", btn)
+        tKey.Size = UDim2.new(1,0,0.33,0)
+        tKey.Position = UDim2.new(0,0,0,0)
+        tKey.Text = cfg.KeyName
+        tKey.BackgroundTransparency = 1
+        tKey.TextColor3 = Color3.fromRGB(255,255,255)
+        tKey.Font = Enum.Font.Gotham
+        tKey.TextSize = 14
+
+        -- Timer Label
+        local tTimer = Instance.new("TextLabel", btn)
+        tTimer.Size = UDim2.new(1,0,0.33,0)
+        tTimer.Position = UDim2.new(0,0,0.33,0)
+        tTimer.Text = ""
+        tTimer.BackgroundTransparency = 1
+        tTimer.TextColor3 = Color3.fromRGB(255,255,255)
+        tTimer.Font = Enum.Font.Gotham
+        tTimer.TextSize = 23
+
+        -- Ability Name Label
+        local tName = Instance.new("TextLabel", btn)
+        tName.Size = UDim2.new(1,0,0.34,0)
+        tName.Position = UDim2.new(0,0,0.66,0)
+        tName.Text = cfg.Name
+        tName.BackgroundTransparency = 1
+        tName.TextColor3 = Color3.fromRGB(255,255,255)
+        tName.Font = Enum.Font.Gotham
+        tName:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+            adjustFont(tName)
+        end)
+
+        -- Activation Logic
+        local canClick = true
+        local animTrack
+        if cfg.Animations then
+            local char = player.Character or player.CharacterAdded:Wait()
+            local humanoid = char:WaitForChild("Humanoid")
+            local animation = Instance.new("Animation")
+            animation.AnimationId = cfg.Animations["Default"]
+            animTrack = humanoid:LoadAnimation(animation)
+            animTrack.Looped = false
+        end
+
+        local function activate()
+            if not canClick then return end
+            local char = player.Character
+            if not char or char:GetAttribute("Character") ~= "Guest666" or char.Humanoid.Health <= 0 then return end
+            canClick = false
+            if animTrack then animTrack:Play() end
+            cfg.RemoteEvent:FireServer()
+            if cfg.CustomActivate then cfg.CustomActivate(char, animTrack, cfg.RemoteEvent) end
+
+            tTimer.Text = tostring(cfg.Cooldown)
+            task.spawn(function()
+                for t = cfg.Cooldown*10,1,-1 do
+                    tTimer.Text = string.format("%.1f", t/10)
+                    task.wait(0.1)
+                end
+                tTimer.Text = ""
+                canClick = true
+            end)
+        end
+
+        btn.Activated:Connect(activate)
+        UserInputService.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType == cfg.Key or input.KeyCode == cfg.Key then
+                activate()
+            end
+        end)
+    end
+end
