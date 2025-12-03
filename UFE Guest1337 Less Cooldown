@@ -1,0 +1,190 @@
+-- Made by WolfIk8
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
+
+-- Player and GUI
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local frame = playerGui:WaitForChild("CoreHud"):WaitForChild("Guest1337")
+
+-- Button Configuration
+local buttonConfigs = {
+    {
+        Name = "Block",
+        Key = Enum.KeyCode.Q,
+        KeyName = "Q",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Guest1337:WaitForChild("Block"),
+        Animations = nil,
+        Cooldown = 3
+    },
+    {
+        Name = "Charge",
+        Key = Enum.KeyCode.E,
+        KeyName = "E",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Guest1337:WaitForChild("ChargeRemote"),
+        Animations = nil,
+        Cooldown = 3
+    },
+    {
+        Name = "Punch",
+        Key = Enum.KeyCode.R,
+        KeyName = "R",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Guest1337:WaitForChild("GuestAttackRemote"),
+        Animations = {
+            Taunt = "rbxassetid://80398607710743";
+            KaiGuest = "rbxassetid://89508608914089";
+            RetroGuest = "rbxassetid://87147217613036";
+            Jesse = "rbxassetid://133633413731696";
+            Metro = "rbxassetid://140468518233754";
+            Default = "rbxassetid://135814994052102";
+            Metro_Parry = "rbxassetid://115312994750116";
+            DragonGuest_Parry = "rbxassetid://121023507449648";
+            sind_Parry = "rbxassetid://121023507449648";
+            RetroGuest_Parry = "rbxassetid://128452253585794";
+            Milestone100Guest_Parry = "rbxassetid://125659040353427";
+            SorcererGuest_Parry = "rbxassetid://114366111798141";
+            Jesse_Parry = "rbxassetid://122041808236224";
+        },
+        Cooldown = 3
+    }
+}
+
+-- Store old button data
+local oldButtonsData = {}
+for _, cfg in ipairs(buttonConfigs) do
+    local oldBtn = frame:FindFirstChild(cfg.Name)
+    if oldBtn and oldBtn:IsA("ImageButton") then
+        oldButtonsData[cfg.Name] = {
+            Position = oldBtn.AbsolutePosition,
+            Size = oldBtn.AbsoluteSize
+        }
+    end
+end
+
+-- Remove old ImageButtons
+for _, oldBtn in ipairs(frame:GetChildren()) do
+    if oldBtn:IsA("ImageButton") and table.find({"Block","Charge","Punch"}, oldBtn.Name) then
+        oldBtn:Destroy()
+    end
+end
+
+-- Font adjustment function
+local function adjustFont(label)
+    local text = label.Text
+    local labelWidth = label.AbsoluteSize.X
+    local labelHeight = label.AbsoluteSize.Y
+    local maxSize = 20
+    local minSize = 5
+    local font = label.Font
+    local size = maxSize
+    while size >= minSize do
+        local textSize = TextService:GetTextSize(text, size, font, Vector2.new(10000,10000))
+        if textSize.X <= labelWidth and textSize.Y <= labelHeight then break end
+        size = size - 1
+    end
+    label.TextSize = size
+end
+
+-- Create GUI buttons
+for _, cfg in ipairs(buttonConfigs) do
+    local data = oldButtonsData[cfg.Name]
+
+    local btn = Instance.new("TextButton")
+    btn.Name = cfg.Name
+    btn.BackgroundColor3 = Color3.fromRGB(0,0,0)
+    btn.BackgroundTransparency = 0.5
+    btn.Text = ""
+    btn.BorderSizePixel = 1
+    btn.BorderColor3 = Color3.fromRGB(0,0,0)
+
+    if data then
+        btn.Position = UDim2.fromOffset(data.Position.X, data.Position.Y)
+        btn.Size = UDim2.fromOffset(data.Size.X, data.Size.Y)
+    else
+        btn.Position = UDim2.fromOffset(0, 0)
+        btn.Size = UDim2.fromOffset(100, 100)
+    end
+    btn.Parent = frame
+
+    -- Key Label
+    local tKey = Instance.new("TextLabel", btn)
+    tKey.Size = UDim2.new(1,0,0.33,0)
+    tKey.Position = UDim2.new(0,0,0,0)
+    tKey.Text = cfg.KeyName
+    tKey.BackgroundTransparency = 1
+    tKey.TextColor3 = Color3.fromRGB(255,255,255)
+    tKey.Font = Enum.Font.Gotham
+    tKey.TextSize = 14
+
+    -- Timer Label
+    local tTimer = Instance.new("TextLabel", btn)
+    tTimer.Size = UDim2.new(1,0,0.33,0)
+    tTimer.Position = UDim2.new(0,0,0.33,0)
+    tTimer.Text = ""
+    tTimer.BackgroundTransparency = 1
+    tTimer.TextColor3 = Color3.fromRGB(255,255,255)
+    tTimer.Font = Enum.Font.Gotham
+    tTimer.TextSize = 23
+
+    -- Ability Name Label
+    local tName = Instance.new("TextLabel", btn)
+    tName.Size = UDim2.new(1,0,0.34,0)
+    tName.Position = UDim2.new(0,0,0.66,0)
+    tName.Text = cfg.Name
+    tName.BackgroundTransparency = 1
+    tName.TextColor3 = Color3.fromRGB(255,255,255)
+    tName.Font = Enum.Font.Gotham
+    tName:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+        adjustFont(tName)
+    end)
+
+    -- Activation Logic
+    local canClick = true
+    local animTracks = {}
+    if cfg.Animations then
+        local char = player.Character or player.CharacterAdded:Wait()
+        local humanoid = char:WaitForChild("Humanoid")
+        for key, animId in pairs(cfg.Animations) do
+            local animation = Instance.new("Animation")
+            animation.AnimationId = animId
+            animTracks[key] = humanoid:LoadAnimation(animation)
+            animTracks[key].Looped = false
+        end
+    end
+
+    local function activate()
+        if not canClick then return end
+        local char = player.Character
+        if not char or char:GetAttribute("Character") ~= "Guest1337" or char.Humanoid.Health <= 0 then return end
+        canClick = false
+
+        -- Play default animation if exists
+        if animTracks["Default"] then
+            animTracks["Default"]:Play()
+        end
+
+        cfg.RemoteEvent:FireServer()
+
+        tTimer.Text = tostring(cfg.Cooldown)
+        task.spawn(function()
+            for t = cfg.Cooldown*10,1,-1 do
+                tTimer.Text = string.format("%.1f", t/10)
+                task.wait(0.1)
+            end
+            tTimer.Text = ""
+            canClick = true
+        end)
+    end
+
+    btn.Activated:Connect(activate)
+    UserInputService.InputBegan:Connect(function(input, processed)
+        if processed then return end
+        if input.KeyCode == cfg.Key or input.UserInputType == cfg.Key then
+            activate()
+        end
+    end)
+end
