@@ -19,7 +19,7 @@ local buttonConfigs = {
         KeyName = "Q",
         RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Guest1337:WaitForChild("Block"),
         Animations = nil,
-        Cooldown = 3
+        Cooldown = 5
     },
     {
         Name = "Charge",
@@ -27,7 +27,7 @@ local buttonConfigs = {
         KeyName = "E",
         RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Guest1337:WaitForChild("ChargeRemote"),
         Animations = nil,
-        Cooldown = 3
+        Cooldown = 5
     },
     {
         Name = "Punch",
@@ -49,7 +49,7 @@ local buttonConfigs = {
             SorcererGuest_Parry = "rbxassetid://114366111798141";
             Jesse_Parry = "rbxassetid://122041808236224";
         },
-        Cooldown = 3
+        Cooldown = 5
     }
 }
 
