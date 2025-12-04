@@ -23,7 +23,7 @@ local buttonConfigs = {
             ["Hacklord"]="rbxassetid://131561320564067",
             ["Default"]="rbxassetid://95091028013279"
         },
-        Cooldown = 1
+        Cooldown = 0.5
     },
     {
         Name = "MassInfection",
