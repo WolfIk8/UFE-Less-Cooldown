@@ -1,6 +1,6 @@
-loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/Ufe%20Coolkid%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20Guest1337%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20Sixer%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20Subject%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-1x4-Less-Cooldown/refs/heads/main/UFE%201x4%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20John%20Doe%20Less%20Cooldown"))();
+loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20Coolkid%20Less%20Cooldown"))();
