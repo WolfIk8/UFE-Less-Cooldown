@@ -1,0 +1,207 @@
+-- Made by WolfIk8
+
+-- Services
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local UserInputService = game:GetService("UserInputService")
+local TextService = game:GetService("TextService")
+local Workspace = game:GetService("Workspace")
+
+-- Player and GUI
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+local frame = playerGui:WaitForChild("CoreHud"):WaitForChild("Coolkid")
+
+-- Configuration
+local buttonConfigs = {
+    {
+        Name = "Punch",
+        Key = Enum.UserInputType.MouseButton1,
+        KeyName = "LMB",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Coolkid:WaitForChild("CoolkidAttackRemote"),
+        Animations = {
+            ["Mafioso"] = "rbxassetid://106082692754325",
+            ["JX1DX1"] = "rbxassetid://93485633278766",
+            ["BluuDude"] = "rbxassetid://100247942270250",
+            ["Tenna"] = "rbxassetid://123014069994228",
+            ["Default"] = "rbxassetid://91486525775866"
+        },
+        Cooldown = 1
+    },
+    {
+        Name = "Corrupt Nature",
+        Key = Enum.KeyCode.Q,
+        KeyName = "Q",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Coolkid:WaitForChild("Corrupt"),
+        Animations = nil,
+        Cooldown = 5
+    },
+    {
+        Name = "Walkspeed Override",
+        Key = Enum.KeyCode.E,
+        KeyName = "E",
+        RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Coolkid:WaitForChild("Walkspeed"),
+        Animations = {
+            ["Mafioso"] = "rbxassetid://110626901283305",
+            ["JX1DX1"] = "rbxassetid://79032720453691",
+            ["BluuDude"] = "rbxassetid://91163143376426",
+            ["Tenna"] = "rbxassetid://94375670460906",
+            ["Default"] = "rbxassetid://129615161490631"
+        },
+        Cooldown = 5
+    }
+}
+
+-- Old Button Data
+local oldButtonsData = {}
+for _, cfg in ipairs(buttonConfigs) do
+    local oldBtn = frame:FindFirstChild(cfg.Name)
+    if oldBtn and oldBtn:IsA("ImageButton") then
+        oldButtonsData[cfg.Name] = {
+            Position = oldBtn.AbsolutePosition,
+            Size = oldBtn.AbsoluteSize
+        }
+    end
+end
+
+-- Remove Old Buttons
+for _, oldBtn in ipairs(frame:GetChildren()) do
+    if oldBtn:IsA("ImageButton") and table.find({"Punch","Corrupt Nature","Walkspeed Override"}, oldBtn.Name) then
+        oldBtn:Destroy()
+    end
+end
+
+-- Font adjust function
+local function adjustFont(label)
+    local text = label.Text
+    local labelWidth = label.AbsoluteSize.X
+    local labelHeight = label.AbsoluteSize.Y
+    local maxSize = 20
+    local minSize = 5
+    local font = label.Font
+    local size = maxSize
+    while size >= minSize do
+        local textSize = TextService:GetTextSize(text, size, font, Vector2.new(10000,10000))
+        if textSize.X <= labelWidth and textSize.Y <= labelHeight then break end
+        size = size - 1
+    end
+    label.TextSize = size
+end
+
+-- GUI creation
+for _, cfg in ipairs(buttonConfigs) do
+    local data = oldButtonsData[cfg.Name]
+    if data then
+        local btn = Instance.new("TextButton")
+        btn.Name = cfg.Name
+        btn.BackgroundColor3 = Color3.new(0,0,0)
+        btn.BackgroundTransparency = 0.5
+        btn.Text = ""
+        btn.BorderSizePixel = 1
+        btn.BorderColor3 = Color3.new(0,0,0)
+
+        local parentSize = frame.AbsoluteSize
+        local scaleX = data.Position.X / parentSize.X
+        local scaleY = data.Position.Y / parentSize.Y
+        local sizeX = data.Size.X / parentSize.X
+        local sizeY = data.Size.Y / parentSize.Y
+        btn.Position = UDim2.new(scaleX,0,scaleY,0)
+        btn.Size = UDim2.new(sizeX,0,sizeY,0)
+        btn.Parent = frame
+
+        local tKey = Instance.new("TextLabel", btn)
+        tKey.Size = UDim2.new(1,0,0.33,0)
+        tKey.Position = UDim2.new(0,0,0,0)
+        tKey.Text = cfg.KeyName
+        tKey.BackgroundTransparency = 1
+        tKey.TextColor3 = Color3.new(1,1,1)
+        tKey.Font = Enum.Font.Gotham
+        tKey.TextSize = 14
+
+        local tTimer = Instance.new("TextLabel", btn)
+        tTimer.Size = UDim2.new(1,0,0.33,0)
+        tTimer.Position = UDim2.new(0,0,0.33,0)
+        tTimer.Text = ""
+        tTimer.BackgroundTransparency = 1
+        tTimer.TextColor3 = Color3.new(1,1,1)
+        tTimer.Font = Enum.Font.Gotham
+        tTimer.TextSize = 23
+
+        local tName = Instance.new("TextLabel", btn)
+        tName.Size = UDim2.new(1,0,0.34,0)
+        tName.Position = UDim2.new(0,0,0.66,0)
+        tName.Text = cfg.Name
+        tName.BackgroundTransparency = 1
+        tName.TextColor3 = Color3.new(1,1,1)
+        tName.Font = Enum.Font.Gotham
+        tName:GetPropertyChangedSignal("AbsoluteSize"):Connect(function()
+            adjustFont(tName)
+        end)
+
+        local canClick = true
+        local animTrack
+
+        local function updateAnimation()
+            if not cfg.Animations then return end
+            local char = player.Character
+            if not char then return end
+            local humanoid = char:FindFirstChild("Humanoid")
+            if not humanoid then return end
+            local skin = char:GetAttribute("Skin") or "Default"
+            local animation = Instance.new("Animation")
+            animation.AnimationId = cfg.Animations[skin] or cfg.Animations["Default"]
+            if animTrack then animTrack:Stop() end
+            animTrack = humanoid:LoadAnimation(animation)
+            animTrack.Looped = false
+        end
+
+        updateAnimation()
+        player.CharacterAdded:Connect(function(c)
+            c:WaitForChild("Humanoid")
+            updateAnimation()
+        end)
+        player:GetAttributeChangedSignal("Skin"):Connect(updateAnimation)
+
+        local function getMousePosition()
+            if UserInputService.TouchEnabled then
+                return (Workspace.CurrentCamera.CFrame * CFrame.new(0,0,-500)).Position
+            end
+            local mouse = player:GetMouse()
+            local ray = Workspace.CurrentCamera:ScreenPointToRay(mouse.X, mouse.Y)
+            return ray.Origin + ray.Direction * 500
+        end
+
+        local function activate()
+            if not canClick then return end
+            local char = player.Character
+            if not char or char:GetAttribute("Character") ~= "Coolkid" or char.Humanoid.Health <= 0 then return end
+            canClick = false
+
+            if animTrack then animTrack:Play() end
+
+            if cfg.Name == "Corrupt Nature" then
+                cfg.RemoteEvent:FireServer(getMousePosition())
+            else
+                cfg.RemoteEvent:FireServer()
+            end
+
+            tTimer.Text = tostring(cfg.Cooldown)
+            task.spawn(function()
+                for t = cfg.Cooldown*10,1,-1 do
+                    tTimer.Text = string.format("%.1f", t/10)
+                    task.wait(0.1)
+                end
+                tTimer.Text = ""
+                canClick = true
+            end)
+        end
+
+        btn.Activated:Connect(activate)
+        UserInputService.InputBegan:Connect(function(input, processed)
+            if processed then return end
+            if input.UserInputType == cfg.Key or input.KeyCode == cfg.Key then
+                activate()
+            end
+        end)
+    end
+end
