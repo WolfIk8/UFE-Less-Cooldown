@@ -21,7 +21,7 @@ local buttonConfigs = {
         Animations = {
             ["Default"] = "rbxassetid://104802307926058"
         },
-        Cooldown = 1
+        Cooldown = 0.5
     },
     {
         Name = "DemonicPursuit",
