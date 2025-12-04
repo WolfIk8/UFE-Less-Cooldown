@@ -136,14 +136,27 @@ for _, cfg in ipairs(buttonConfigs) do
 
         -- Activation Logic
         local canClick = true
-        local animTrack
-        if cfg.Animations then
-            local char = player.Character or player.CharacterAdded:Wait()
-            local humanoid = char:WaitForChild("Humanoid")
-            local animation = Instance.new("Animation")
-            animation.AnimationId = cfg.Animations["Default"]
-            animTrack = humanoid:LoadAnimation(animation)
-            animTrack.Looped = false
+        local animTracks = {}
+
+        local function updateAnimations()
+            local char = player.Character
+            if not char then return end
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if not humanoid then return end
+            animTracks = {}
+            if cfg.Animations then
+                for key, animId in pairs(cfg.Animations) do
+                    local animation = Instance.new("Animation")
+                    animation.AnimationId = animId
+                    animTracks[key] = humanoid:LoadAnimation(animation)
+                    animTracks[key].Looped = false
+                end
+            end
+        end
+
+        player.CharacterAdded:Connect(updateAnimations)
+        if player.Character then
+            updateAnimations()
         end
 
         local function activate()
@@ -151,9 +164,14 @@ for _, cfg in ipairs(buttonConfigs) do
             local char = player.Character
             if not char or char:GetAttribute("Character") ~= "Guest666" or char.Humanoid.Health <= 0 then return end
             canClick = false
-            if animTrack then animTrack:Play() end
+
+            -- Play default animation if exists
+            if animTracks["Default"] then
+                animTracks["Default"]:Play()
+            end
+
             cfg.RemoteEvent:FireServer()
-            if cfg.CustomActivate then cfg.CustomActivate(char, animTrack, cfg.RemoteEvent) end
+            if cfg.CustomActivate then cfg.CustomActivate(char, animTracks["Default"], cfg.RemoteEvent) end
 
             tTimer.Text = tostring(cfg.Cooldown)
             task.spawn(function()
