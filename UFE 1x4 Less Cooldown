@@ -142,23 +142,27 @@ for _, cfg in ipairs(buttonConfigs) do
 
         -- Button Functionality
         local canClick = true
-        local animTrack
-        if cfg.Animations then
-            local char = player.Character or player.CharacterAdded:Wait()
-            local humanoid = char:WaitForChild("Humanoid")
-            local animation = Instance.new("Animation")
-            local skin = char:GetAttribute("Skin")
-            animation.AnimationId = cfg.Animations[skin] or cfg.Animations["Default"]
-            animTrack = humanoid:LoadAnimation(animation)
-            animTrack.Looped = false
-            player.CharacterAdded:Connect(function(c)
-                local h = c:WaitForChild("Humanoid")
-                local a = Instance.new("Animation")
-                local s = c:GetAttribute("Skin")
-                a.AnimationId = cfg.Animations[s] or cfg.Animations["Default"]
-                animTrack = h:LoadAnimation(a)
-                animTrack.Looped = false
-            end)
+        local animTracks = {}
+
+        local function updateAnimations()
+            local char = player.Character
+            if not char then return end
+            local humanoid = char:FindFirstChildOfClass("Humanoid")
+            if not humanoid then return end
+            animTracks = {}
+            if cfg.Animations then
+                for key, animId in pairs(cfg.Animations) do
+                    local animation = Instance.new("Animation")
+                    animation.AnimationId = animId
+                    animTracks[key] = humanoid:LoadAnimation(animation)
+                    animTracks[key].Looped = false
+                end
+            end
+        end
+
+        player.CharacterAdded:Connect(updateAnimations)
+        if player.Character then
+            updateAnimations()
         end
 
         -- Activation
@@ -167,7 +171,7 @@ for _, cfg in ipairs(buttonConfigs) do
             local char = player.Character
             if not char or char:GetAttribute("Character") ~= "1x4" or char.Humanoid.Health <= 0 then return end
             canClick = false
-            if animTrack then animTrack:Play() end
+            if animTracks["Default"] then animTracks["Default"]:Play() end
             cfg.RemoteEvent:FireServer()
 
             tTimer.Text = tostring(cfg.Cooldown)
