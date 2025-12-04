@@ -23,7 +23,7 @@ local buttonConfigs = {
             ["WhitePumpkin"]="rbxassetid://118879458280903",
             ["Default"]="rbxassetid://101757043928040"
         },
-        Cooldown = 1,
+        Cooldown = 0.5,
         CustomActivate = function(char, animTrack, RemoteEvent)
             if char:GetAttribute("Enraged") then
                 char:SetAttribute("Enraged", false)
@@ -39,7 +39,7 @@ local buttonConfigs = {
         KeyName = "Q",
         RemoteEvent = ReplicatedStorage.PleaseStopSkiddingMyCharacterEvents.Subject:WaitForChild("Sike"),
         Animations = nil,
-        Cooldown = 9
+        Cooldown = 10
     },
     {
         Name = "Throat Steal",
