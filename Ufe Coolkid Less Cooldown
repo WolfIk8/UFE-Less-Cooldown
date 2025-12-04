@@ -26,7 +26,7 @@ local buttonConfigs = {
             ["Tenna"] = "rbxassetid://123014069994228",
             ["Default"] = "rbxassetid://91486525775866"
         },
-        Cooldown = 1
+        Cooldown = 0.5
     },
     {
         Name = "Corrupt Nature",
