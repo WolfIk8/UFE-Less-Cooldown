@@ -146,33 +146,28 @@ for _, cfg in ipairs(buttonConfigs) do
 
         -- Activation Logic
         local canClick = true
-        local animTrack
-        if cfg.Animations then
-            local char = player.Character or player.CharacterAdded:Wait()
-            local humanoid = char:WaitForChild("Humanoid")
-            local animation = Instance.new("Animation")
-            local skin = char:GetAttribute("Skin")
-            animation.AnimationId = cfg.Animations[skin] or cfg.Animations["Default"]
-            animTrack = humanoid:LoadAnimation(animation)
-            animTrack.Looped = false
-            player.CharacterAdded:Connect(function(c)
-                local h = c:WaitForChild("Humanoid")
-                local a = Instance.new("Animation")
-                local s = c:GetAttribute("Skin")
-                a.AnimationId = cfg.Animations[s] or cfg.Animations["Default"]
-                animTrack = h:LoadAnimation(a)
-                animTrack.Looped = false
-            end)
-        end
 
         local function activate()
             if not canClick then return end
             local char = player.Character
             if not char or char:GetAttribute("Character") ~= "JohnDoe" or char.Humanoid.Health <= 0 then return end
             canClick = false
-            if animTrack then animTrack:Play() end
+
+            -- Load animation if есть Animations
+            local animTrack
+            if cfg.Animations then
+                local humanoid = char:WaitForChild("Humanoid")
+                local animation = Instance.new("Animation")
+                local skin = char:GetAttribute("Skin")
+                animation.AnimationId = cfg.Animations[skin] or cfg.Animations["Default"]
+                animTrack = humanoid:LoadAnimation(animation)
+                animTrack.Looped = false
+                animTrack:Play()
+            end
+
             cfg.RemoteEvent:FireServer()
 
+            -- Cooldown Timer
             tTimer.Text = tostring(cfg.Cooldown)
             task.spawn(function()
                 for t = cfg.Cooldown*10,1,-1 do
