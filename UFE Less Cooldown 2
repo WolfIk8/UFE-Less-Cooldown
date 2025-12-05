@@ -4,3 +4,4 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cool
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-1x4-Less-Cooldown/refs/heads/main/UFE%201x4%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20John%20Doe%20Less%20Cooldown"))();
 loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20Coolkid%20Less%20Cooldown"))();
+loadstring(game:HttpGet("https://raw.githubusercontent.com/WolfIk8/UFE-Less-Cooldown/refs/heads/main/UFE%20Slasher%20Less%20Cooldown"))();
